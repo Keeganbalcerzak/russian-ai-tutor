@@ -39,3 +39,22 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/src/generated/prisma
+
+# local database
+*.db
+*.db-journal
+/prisma/*.db
+
+# cached TTS audio
+/public/audio
+
+# keep the env template
+!.env.example
+
+# local tool state
+.remember/
+.impeccable/
+.claude/
+dev.db

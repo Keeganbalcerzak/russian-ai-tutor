@@ -1,5 +1,5 @@
 {
-  "name": "ianapp",
+  "name": "russian-ai-tutor",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,7 +9,12 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/client": "^7.8.0",
+    "better-sqlite3": "^12.10.1",
+    "dotenv": "^17.4.2",
     "next": "16.2.9",
+    "openai": "^6.42.0",
     "react": "19.2.4",
     "react-dom": "19.2.4"
   },
@@ -20,7 +25,11 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "prisma": "^7.8.0",
     "tailwindcss": "^4",
     "typescript": "^5"
+  },
+  "overrides": {
+    "postcss": "^8.5.10"
   }
 }

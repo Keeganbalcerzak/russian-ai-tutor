@@ -1,0 +1,116 @@
+// Russian Conversation Tutor — data model
+// SQLite has no native enums; status/level/category use String with documented values.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+/// A vocabulary item the learner is tracking, with spaced-repetition state.
+model Word {
+  id              Int       @id @default(autoincrement())
+  lemma           String    @unique // Russian base form (dictionary form)
+  translation     String
+  transliteration String?
+  partOfSpeech    String?
+  notes           String?
+  status          String    @default("NEW") // NEW | LEARNING | KNOWN | STRUGGLING
+
+  // Spaced-repetition (SM-2) state
+  easeFactor   Float     @default(2.5)
+  intervalDays Float     @default(0)
+  repetitions  Int       @default(0)
+  dueAt        DateTime  @default(now())
+  lastSeenAt   DateTime?
+
+  exposureCount  Int @default(0)
+  correctCount   Int @default(0)
+  incorrectCount Int @default(0)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  mistakes  Mistake[]
+
+  @@index([dueAt])
+  @@index([status])
+}
+
+/// A grammar or usage concept (e.g. "genitive case", "verb aspect").
+model Concept {
+  id              Int       @id @default(autoincrement())
+  name            String    @unique
+  category        String    @default("grammar") // grammar | usage | vocab-theme
+  description     String?
+  masteryScore    Float     @default(0) // 0..1
+  errorCount      Int       @default(0)
+  practiceCount   Int       @default(0)
+  lastPracticedAt DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  mistakes  Mistake[]
+}
+
+/// One chat session.
+model Conversation {
+  id        Int       @id @default(autoincrement())
+  title     String?
+  topic     String?
+  startedAt DateTime  @default(now())
+  endedAt   DateTime?
+  summary   String?
+  messages  Message[]
+  mistakes  Mistake[]
+}
+
+/// A single chat message.
+model Message {
+  id             Int          @id @default(autoincrement())
+  conversationId Int
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role           String // user | assistant
+  content        String
+  audioPath      String?
+  createdAt      DateTime     @default(now())
+  mistakes       Mistake[]
+
+  @@index([conversationId])
+}
+
+/// A logged error with its correction, surfaced retrospectively.
+model Mistake {
+  id             Int           @id @default(autoincrement())
+  original       String
+  correction     String
+  explanation    String?
+  conceptId      Int?
+  concept        Concept?      @relation(fields: [conceptId], references: [id])
+  wordId         Int?
+  word           Word?         @relation(fields: [wordId], references: [id])
+  messageId      Int?
+  message        Message?      @relation(fields: [messageId], references: [id], onDelete: SetNull)
+  conversationId Int?
+  conversation   Conversation? @relation(fields: [conversationId], references: [id], onDelete: SetNull)
+  resolved       Boolean       @default(false)
+  createdAt      DateTime      @default(now())
+
+  @@index([resolved])
+  @@index([createdAt])
+}
+
+/// Single-row app settings.
+model Settings {
+  id            Int      @id @default(1)
+  level         String   @default("beginner") // beginner | intermediate | advanced
+  voice         String   @default("alloy")
+  chatModel     String   @default("gpt-5.1-chat-latest")
+  analyzerModel String   @default("gpt-5-mini")
+  ttsModel      String   @default("gpt-4o-mini-tts")
+  onboarded     Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
